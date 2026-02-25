@@ -85,7 +85,7 @@ Battery +  ---- R1 (100k) ----+---- A0
 
 Full firmware code available here:
 
-👉 [Open Firmware File](./firmware/esp8266_smart_pwm.ino)
+👉 [Open Firmware File](ESP8266 LED controller.ini)
 
 ---
 
