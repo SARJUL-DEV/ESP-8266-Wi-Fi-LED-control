@@ -85,7 +85,7 @@ Battery +  ---- R1 (100k) ----+---- A0
 
 Full firmware code available here:
 
-👉 [Open Firmware File](./ESP8266 LED controller.ini)
+👉 [Open Firmware File](./ESP8266LEDcontroller.ini)
 
 ---
 
