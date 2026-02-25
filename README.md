@@ -94,7 +94,8 @@ Full firmware code available here:
 1. Upload firmware
 2. Connect to WiFi: ESP_Light
 3. Open browser: 192.168.4.1
-4. Control brightness
+4. Wi-Fi password:12345678
+5. Control brightness
 
 ---
 
