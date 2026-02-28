@@ -1,173 +1,178 @@
-# ESP8266 Smart PWM LED Controller
+# 🔥 ESP8266 Smart LED + Smart Heartbeat Buzzer System
 
-A beginner-friendly WiFi controlled LED dimmer using ESP8266 and MOSFET with smooth fading and live voltage monitoring.
-
----
-
-# What This Project Does
-
-- Control LED brightness from phone
-- Turn LED ON / OFF from browser
-- Smooth fade without lag
-- Show live battery voltage
-- Works without internet (Access Point mode)
+Advanced PWM LED Controller with Smart Battery Monitoring  
+Accurate Wiring Based on Final Firmware Code
 
 ---
 
-# Required Components
+# ✅ PIN CONFIGURATION (FROM ACTUAL CODE)
 
-| Component | Quantity |
-|-----------|----------|
-| ESP8266 NodeMCU | 1 |
-| Logic Level N-Channel MOSFET (IRLZ44N / IRLZ34N / AO3400 etc.) | 1 |
-| LED Strip / LED Load | 1 |
-| External Power Supply for LED | 1 |
-| Resistor 100kΩ | 2 |
-| Wires | As needed |
+| Function        | GPIO | NodeMCU Pin |
+|---------------|------|-------------|
+| LED PWM       | 14   | D5          |
+| Buzzer (Tone) | 5    | D1          |
+| Battery Sense | A0   | A0          |
 
----
-
-# Important Safety
-
-Never connect 4.2V battery directly to A0.  
-You MUST use a voltage divider.
+PWM Frequency: 500Hz  
+PWM Range: 0–1023  
 
 ---
 
-# Step 1: MOSFET Connection (LED Control)
+# 🧠 SYSTEM WORKING
 
-Follow this exactly:
+ESP8266 creates:
 
-```
-External Power +  ----->  LED +
+PWM signal → GPIO14 → MOSFET → High Power LED  
+Tone signal → GPIO5 → Passive Buzzer  
+Battery → Voltage Divider → A0  
 
-LED -              ----->  MOSFET Drain
-
-MOSFET Source      ----->  GND
-
-MOSFET Gate        ----->  D5 (GPIO14)
-
-ESP8266 GND        ----->  Power Supply GND
-```
-
-Important:
-ESP8266 GND and Power Supply GND must be connected together.
+If battery drops below 50% → smart interval beeping starts  
+Lower battery = faster beep  
 
 ---
 
-# Step 2: Battery Voltage Divider (Very Important)
+# 🔌 COMPLETE HARDWARE DIAGRAM
 
-We use two 100k resistors.
+==============================
+SECTION 1: LED + MOSFET DRIVER
+==============================
 
-```
-Battery +  ---- R1 (100k) ----+---- A0
-                               |
-                             R2 (100k)
-                               |
-                              GND
-```
+Use Logic Level N-Channel MOSFET  
+Example: IRLZ44N / AO3400
 
-R1 = 100k  
-R2 = 100k  
+MOSFET Front View:
 
-This divides voltage safely.
+        _______
+       |       |
+       |       |
+       |_______|
+         G  D  S
+
+G = Gate  
+D = Drain  
+S = Source  
+
+CONNECTIONS:
+
+D5 (GPIO14) → 220Ω → Gate  
+Gate → 10kΩ → GND  
+
+Battery + → LED +  
+LED − → Drain  
+Source → GND  
+Battery − → GND  
+
+IMPORTANT:
+ESP8266 GND and Battery GND must be connected together.
+
+DO NOT connect LED directly to ESP8266.
+
+---
+
+=================================
+SECTION 2: BATTERY VOLTAGE MONITOR
+=================================
+
+Voltage Divider (Your code uses ×2 scaling)
+
+Battery + → 100kΩ → A0 → 100kΩ → GND  
 
 Why?
-ESP8266 A0 maximum input = 3.3V  
-Battery maximum = 4.2V  
-Divider protects the pin.
+ESP8266 A0 max input = 3.3V  
+Battery max = 4.2V  
+Divider cuts voltage in half.
+
+Formula used in code:
+
+Battery Voltage = (A0 / 1023) × 3.3 × 2
 
 ---
 
-# Step 3: Full Wiring Overview
+=================================
+SECTION 3: BUZZER CONNECTION (VERY IMPORTANT)
+=================================
 
-```
-                 +--------------------+
-                 |      ESP8266       |
-                 |                    |
-Battery + ----R1-+---- A0             |
-Battery - ----------- GND              |
-                 |                    |
-D5 (GPIO14) -------- MOSFET Gate       |
-GND ---------------- MOSFET Source     |
-                 +--------------------+
+Your code uses:
 
-External Power + ---- LED +
-LED - ------------- MOSFET Drain
-```
+tone(BUZZER_PIN, 2000);
 
----
+That means you MUST use:
 
-# Step 4: Upload Firmware
+✔ PASSIVE BUZZER  
+✘ NOT Active Buzzer  
 
-1. Install ESP8266 board package in Arduino IDE
-2. Select NodeMCU 1.0
-3. Paste firmware code
-4. Upload
+Connection:
+
+D1 (GPIO5) → Buzzer +
+Buzzer − → GND
+
+No resistor required.
+
+If buzzer is large or loud speaker type:
+Use NPN transistor driver.
 
 ---
 
-# Step 5: Connect
+# 🎵 SMART HEARTBEAT BUZZER LOGIC
 
-After upload:
+Battery > 50% → No beep  
+30–50% → Beep every 8 sec  
+20–30% → Beep every 5 sec  
+10–20% → Beep every 3 sec  
+<10% → Beep every 1.5 sec  
 
-1. Turn on ESP8266
-2. Connect WiFi: ESP_Light
-3. Password: 12345678
-4. Open browser
-5. Go to: 192.168.4.1
+Each beep duration = 80ms  
+Tone frequency = 2000Hz  
 
----
-
-# How It Works
-
-- Slider controls PWM signal on D5
-- MOSFET switches LED power
-- Smooth fade runs in background
-- Voltage updates every second
-- State remains after refresh
+This is software-controlled interval alert system.
 
 ---
 
-# Common Mistakes
+# 💡 PWM LED FADE SYSTEM
 
-If voltage shows 0.00:
+Your loop creates smooth fade:
 
-- Battery negative not connected to ESP GND
-- Divider wired wrong
-- Only one resistor used
-- Wrong resistor values
+Every 5ms:
+currentOutput moves 1 step toward targetOutput
 
-If LED does not dim:
-
-- MOSFET not logic-level type
-- Gate not connected to D5
-- Ground not shared
+Result:
+Soft brightness transition  
+No sudden jump  
 
 ---
 
-# Recommended MOSFET Types
+# ⚡ POWER ARCHITECTURE
 
-- IRLZ44N
-- IRLZ34N
-- AO3400
-- Any logic-level N-channel MOSFET
+Battery +  
+   ├── LED circuit (via MOSFET)
+   └── ESP8266 Vin (if 5V regulated)
 
-Avoid:
-IRFZ44N (not ideal for 3.3V logic)
+Common Ground required everywhere.
 
 ---
 
-# Final Result
+# 🚫 DO NOT DO THIS
 
-- Smooth brightness
-- No hanging
-- Live voltage
-- Clean web UI
-- Beginner friendly wiring
+✘ Do not use Active Buzzer (won’t work with tone properly)
+✘ Do not skip 10k Gate pull-down
+✘ Do not connect battery directly to A0
+✘ Do not power LED from ESP8266 pin
+✘ Do not forget common ground
 
 ---
 
-# License
+# 🔥 OPTIONAL PROFESSIONAL IMPROVEMENTS
 
-Free for learning and personal projects.
+- Add battery < 5% auto LED shutdown
+- Add deep sleep mode
+- Add OTA update
+- Add OLED display
+- Add current sensor (INA219)
+- Add over-temperature cutoff
+
+---
+
+# 👤 Author
+
+Sarjul  
+Smart WiFi LED Controller with Adaptive Battery Alert System
